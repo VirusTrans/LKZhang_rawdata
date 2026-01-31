@@ -3,7 +3,9 @@
 This repository contains the code that accompanies the paper introducing "*TriLock-FISH: Spatial discrimination of influenza A virus vRNA, cRNA, and mRNA in single cells via a split-probe ligation strategy*".
 
 ## Code
-To re-create the python environments:
+To re-create the python environments with [`conda`] run:
+conda env create -f envs/TriLock-FISH
+
 
 ```bash
 import os
@@ -22,3 +24,4 @@ from ufish.api import UFish
 ufish = UFish()
 ufish.load_weights()
 ```
+ We recommend running the code in VS Code. A GPU may be required. Load the following packages.
