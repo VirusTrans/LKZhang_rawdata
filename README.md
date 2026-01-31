@@ -294,6 +294,118 @@ final_df.to_csv('TriLock_FISH.csv')
 
 ```
 Key Point:
-- Change the storage path of the original TIF images in `input_dir = 'data/TriLock_FISH`. The TIF image data should be placed in the TriLock_FISH folder under data; the folder name can be customized. '
+- Change the storage path of the original TIF images in `input_dir = 'data/TriLock_FISH`. The TIF image data should be placed in the TriLock_FISH folder under data; the folder name can be customized. 
 
-- 
+- Output file is ` TriLock_FISH.csv `.
+
+  
+### Visualization for quality control 
+
+def visualize_gene_expression(csv_path, mask_path, base_image_path, output_image_path=None):
+    
+    df = pd.read_csv(csv_path)
+    print(f"成功读取CSV文件: {csv_path}")
+
+    mask = skimage.io.imread(mask_path)
+    print(f"成功读取mask文件: {mask_path}")
+
+    img = skimage.io.imread(base_image_path)
+    img = img[:,:,0]
+    print(f"成功读取基底图像文件: {base_image_path}")
+    
+
+    required_columns = {'dim_0', 'dim_1', 'gene', 'mask_label', 'y', 'x'}
+    if not required_columns.issubset(df.columns):
+        missing_cols = required_columns - set(df.columns)
+        print(f"CSV文件缺少必要的列: {missing_cols}")
+        return
+
+    df['y'] = df['y'].round(2)
+    df['x'] = df['x'].round(2)
+    df['coordinate'] = "(" + df['y'].astype(str) + "," + df['x'].astype(str) + ")"
+
+    mask_centers = df[['mask_label', 'y', 'x']].drop_duplicates()
+    print(f"找到 {len(mask_centers)} 个唯一的mask中心坐标。")
+
+    fig, ax = plt.subplots(figsize=(12, 12))
+
+    if img.ndim == 3:
+        img_gray = img[:, :, 0]
+    else:
+        img_gray = img
+    ax.imshow(img_gray, cmap='Blues')
+    print("已绘制最底层的灰度图像。")
+    
+    # mask_rgb = label2rgb(mask, alpha=0.3, image=img_gray)
+    # ax.imshow(mask_rgb)
+    print("已绘制mask作为背景。")
+    
+    spot_x = df['dim_1'].values
+    spot_y = df['dim_0'].values
+    genes = df['gene'].values
+    mask_labels = df['mask_label'].values
+
+    sns.set_palette("colorblind")
+    unique_genes = df['gene'].unique()
+    num_genes = len(unique_genes)
+    palette = sns.color_palette("colorblind", num_genes)
+    gene_colors = {gene: palette[i % len(palette)] for i, gene in enumerate(unique_genes)}
+    spot_colors = [gene_colors[gene] for gene in genes]
+    
+    scatter = ax.scatter(spot_x, spot_y, c=spot_colors, s=25, edgecolors='k', label='Gene Spots')
+    print("已绘制基因表达spots。")
+
+    handles = [plt.Line2D([0], [0], marker='o', color='w', label=gene,
+                          markerfacecolor=gene_colors[gene], markersize=10, markeredgecolor='k') 
+               for gene in unique_genes]
+
+    mask_center_handle = plt.Line2D([0], [0], marker='x', color='blue', linestyle='None',
+                                    markersize=10, label='Mask Centers')
+
+    for idx, row in df.iterrows():
+        spot_x_coord = row['dim_1']
+        spot_y_coord = row['dim_0']
+        center_x = row['x']
+        center_y = row['y']
+        
+        ax.plot([spot_x_coord, center_x], [spot_y_coord, center_y], 
+                color='red', linewidth=0.5, alpha=0.35)
+    
+    print("已绘制连接线。")
+    
+    ax.scatter(mask_centers['x'], mask_centers['y'], c='blue', marker='x', s=50, label='Mask Centers')
+    print("已绘制mask中心点。")
+    
+    ax.legend(handles=handles + [mask_center_handle], title='Genes and Mask Centers', loc='upper right')
+    
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_title('Gene Assignment Visualization')
+    
+    if output_image_path:
+        plt.savefig(output_image_path, bbox_inches='tight')
+        print(f"可视化结果已保存到: {output_image_path}")
+    
+    plt.show()
+
+if __name__ == "__main__":
+
+    dir = 'TriLock_FISH'
+    for file in os.listdir(dir):
+        sample = file.split('.')[0]
+        csv_path = f"./{dir}/{sample}.tif_results/spots_{sample}.csv"                 
+        mask_path = f"./{dir}/{sample}.tif_results/mask.tif"     
+        base_image_path = f"./data/{dir}/{sample}.tif"
+        output_image_path = f"./assign/{sample}.pdf"   
+        os.makedirs('assign', exist_ok=True)
+        visualize_gene_expression(csv_path, mask_path, base_image_path, output_image_path)
+
+
+
+
+
+
+
+
+
+
