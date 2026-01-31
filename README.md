@@ -34,7 +34,7 @@ ufish = UFish()
 ufish.load_weights()
 ```
 
-### Analyses
+### TIF format Picture Analyses
 First step
 ```bash
 def cc_centroids(mask: np.ndarray) -> np.ndarray:
@@ -271,6 +271,25 @@ def count_genes_per_coordinate(csv_path, output_path=None):
 ```
 
 
-Fifth step
+Fifth step 
 
 ```bash
+input_dir = 'data/TriLock_FISH'
+files = os.listdir(input_dir)
+
+df_list= []
+
+for file in files:
+    input = os.path.join(input_dir, file)
+    spots_csv_path, masks = processed_img(input, 120, 0.25)
+    if spots_csv_path != 0:
+        result = count_genes_per_coordinate(spots_csv_path, output_path='True')
+        print(result)
+        result['file_name'] = file
+        df_list.append(result)
+    else:
+        continue
+final_df = pd.concat(df_list, axis=0)
+final_df.to_csv('TriLock_FISH.csv')
+
+```
