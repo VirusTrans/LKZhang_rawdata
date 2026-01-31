@@ -293,3 +293,7 @@ final_df = pd.concat(df_list, axis=0)
 final_df.to_csv('TriLock_FISH.csv')
 
 ```
+Key Point:
+- Change the storage path of the original TIF images in `input_dir = 'data/TriLock_FISH`. The TIF image data should be placed in the TriLock_FISH folder under data; the folder name can be customized. '
+
+- 
