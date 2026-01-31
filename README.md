@@ -301,6 +301,8 @@ Key Point:
   
 ### Visualization for quality control 
 
+```bash
+
 def visualize_gene_expression(csv_path, mask_path, base_image_path, output_image_path=None):
     
     df = pd.read_csv(csv_path)
@@ -399,6 +401,8 @@ if __name__ == "__main__":
         output_image_path = f"./assign/{sample}.pdf"   
         os.makedirs('assign', exist_ok=True)
         visualize_gene_expression(csv_path, mask_path, base_image_path, output_image_path)
+
+```
 
 
 
